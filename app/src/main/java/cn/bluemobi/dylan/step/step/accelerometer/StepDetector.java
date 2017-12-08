@@ -126,7 +126,7 @@ public class StepDetector implements SensorEventListener {
         }
 
         if (!isDirectionUp && lastStatus
-                && (continueUpFormerCount >= 2 || oldValue >= 20)) {
+                && (continueUpFormerCount >= 2 || oldValue >= 30)) {
             peakOfWave = oldValue;
             return true;
         } else if (!lastStatus && isDirectionUp) {

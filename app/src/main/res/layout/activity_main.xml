@@ -9,9 +9,9 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true">
+        android:layout_alignParentStart="true"
+        android:layout_alignParentTop="true">
         <!--android:background="@mipmap/step_bg"-->
 
         <TextView
@@ -26,15 +26,15 @@
             android:drawablePadding="10dp"
             android:gravity="center_vertical"
             android:text="查看历史步数"
-            android:textColor="#333333" />
+            android:textColor="#333333"
+            android:visibility="gone" />
 
         <cn.bluemobi.dylan.step.view.StepArcView
             android:id="@+id/cc"
             android:layout_width="200dp"
             android:layout_height="200dp"
             android:layout_below="@+id/tv_data"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="50dp" />
+            android:layout_centerInParent="true" />
 
         <TextView
             android:id="@+id/tv_set"
@@ -49,17 +49,30 @@
             android:drawablePadding="10dp"
             android:gravity="center_vertical"
             android:text="设置锻炼计划"
-            android:textColor="#333333" />
+            android:textColor="#333333"
+            android:visibility="gone" />
 
         <TextView
             android:id="@+id/tv_isSupport"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/cc"
-            android:layout_marginTop="30dp"
             android:layout_centerHorizontal="true"
+            android:layout_marginTop="30dp"
             android:text="该设备支持计步"
             android:textColor="#333333" />
 
     </RelativeLayout>
+
+    <cn.bluemobi.dylan.step.view.CircleImageView
+        android:id="@+id/iv_show_map"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:clickable="true"
+        android:src="@drawable/run_map" />
+
 </RelativeLayout>

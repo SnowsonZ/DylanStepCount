@@ -463,7 +463,7 @@ public class StepService extends Service implements SensorEventListener {
                 //记录最后一次APP打开到现在的总步数
                 previousStepCount = thisStepCount;
             }
-            Logger.d("tempStep" + tempStep);
+            Log.i("Counter", tempStep + "");
         } else if (stepSensorType == Sensor.TYPE_STEP_DETECTOR) {
             if (event.values[0] == 1.0) {
                 CURRENT_STEP++;

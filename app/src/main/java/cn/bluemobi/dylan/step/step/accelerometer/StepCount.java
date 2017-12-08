@@ -1,5 +1,10 @@
 package cn.bluemobi.dylan.step.step.accelerometer;
 
+
+import android.util.Log;
+
+import com.orhanobut.logger.Logger;
+
 /**
  * Created by dylan on 16/9/27.
  */
@@ -38,6 +43,7 @@ public class StepCount implements StepCountListener {
             } else if (this.count == 9) {
                 this.count++;
                 this.mCount += this.count;
+                Log.i("ACCELEROMETER", this.count + "");
                 notifyListener();
             } else {
                 this.mCount++;

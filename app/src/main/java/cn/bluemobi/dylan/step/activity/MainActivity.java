@@ -14,6 +14,7 @@ import cn.bluemobi.dylan.step.R;
 import cn.bluemobi.dylan.step.step.UpdateUiCallBack;
 import cn.bluemobi.dylan.step.step.service.StepService;
 import cn.bluemobi.dylan.step.step.utils.SharedPreferencesUtils;
+import cn.bluemobi.dylan.step.view.CircleImageView;
 import cn.bluemobi.dylan.step.view.StepArcView;
 
 /**
@@ -25,12 +26,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private TextView tv_set;
     private TextView tv_isSupport;
     private SharedPreferencesUtils sp;
+    private CircleImageView iv_show_map;
 
     private void assignViews() {
         tv_data = (TextView) findViewById(R.id.tv_data);
         cc = (StepArcView) findViewById(R.id.cc);
         tv_set = (TextView) findViewById(R.id.tv_set);
         tv_isSupport = (TextView) findViewById(R.id.tv_isSupport);
+        iv_show_map = (CircleImageView) findViewById(R.id.iv_show_map);
+
     }
 
     @Override
@@ -46,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private void addListener() {
         tv_set.setOnClickListener(this);
         tv_data.setOnClickListener(this);
+        iv_show_map.setOnClickListener(this);
     }
 
     private void initData() {
@@ -114,11 +119,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.tv_set:
-                startActivity(new Intent(this, SetPlanActivity.class));
-                break;
-            case R.id.tv_data:
-                startActivity(new Intent(this, HistoryActivity.class));
+//            case R.id.tv_set:
+//                startActivity(new Intent(this, SetPlanActivity.class));
+//                break;
+//            case R.id.tv_data:
+//                startActivity(new Intent(this, HistoryActivity.class));
+//                break;
+            case R.id.iv_show_map:
+                startActivity(new Intent(this, MapActivity.class));
                 break;
         }
     }
