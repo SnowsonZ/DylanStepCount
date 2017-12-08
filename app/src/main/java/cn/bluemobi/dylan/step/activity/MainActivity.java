@@ -4,65 +4,123 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.RemoteException;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v7.app.AppCompatActivity;
-import android.view.View;
-import android.widget.TextView;
+
+import com.amap.api.maps.AMap;
+import com.amap.api.maps.AMapOptions;
+import com.amap.api.maps.CameraUpdateFactory;
+import com.amap.api.maps.MapsInitializer;
+import com.amap.api.maps.SupportMapFragment;
+import com.amap.api.maps.model.BitmapDescriptorFactory;
+import com.amap.api.maps.model.CameraPosition;
+import com.amap.api.maps.model.LatLng;
+import com.amap.api.maps.model.MyLocationStyle;
+import com.amap.api.maps.model.Polyline;
+import com.amap.api.maps.model.PolylineOptions;
+
+import java.util.List;
 
 import cn.bluemobi.dylan.step.R;
+import cn.bluemobi.dylan.step.fragment.StepFragment;
 import cn.bluemobi.dylan.step.step.UpdateUiCallBack;
 import cn.bluemobi.dylan.step.step.service.StepService;
-import cn.bluemobi.dylan.step.step.utils.SharedPreferencesUtils;
-import cn.bluemobi.dylan.step.view.CircleImageView;
-import cn.bluemobi.dylan.step.view.StepArcView;
 
 /**
  * 记步主页
  */
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private TextView tv_data;
-    private StepArcView cc;
-    private TextView tv_set;
-    private TextView tv_isSupport;
-    private SharedPreferencesUtils sp;
-    private CircleImageView iv_show_map;
-
-    private void assignViews() {
-        tv_data = (TextView) findViewById(R.id.tv_data);
-        cc = (StepArcView) findViewById(R.id.cc);
-        tv_set = (TextView) findViewById(R.id.tv_set);
-        tv_isSupport = (TextView) findViewById(R.id.tv_isSupport);
-        iv_show_map = (CircleImageView) findViewById(R.id.iv_show_map);
-
-    }
+public class MainActivity extends FragmentActivity {
+    private SupportMapFragment mapFragment;
+    private StepFragment stepFragment;
+    private AMap mAMap;
+    private boolean isSet;
+    private MyLocationStyle myLocationStyle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        assignViews();
-        initData();
-        addListener();
+        setContentView(R.layout.main_layout);
+        initFragment();
     }
 
+    private AMapOptions getMapOptions() {
+        AMapOptions options = new AMapOptions();
+        options.rotateGesturesEnabled(false);
+        options.zoomControlsEnabled(false);
 
-    private void addListener() {
-        tv_set.setOnClickListener(this);
-        tv_data.setOnClickListener(this);
-        iv_show_map.setOnClickListener(this);
+        return options;
     }
 
-    private void initData() {
-        sp = new SharedPreferencesUtils(this);
-        //获取用户设置的计划锻炼步数，没有设置过的话默认7000
-        String planWalk_QTY = (String) sp.getParam("planWalk_QTY", "7000");
-        //设置当前步数为0
-        cc.setCurrentCount(Integer.parseInt(planWalk_QTY), 0);
-        tv_isSupport.setText("计步中...");
+    private void initFragment() {
+        mapFragment = SupportMapFragment.newInstance(getMapOptions());
+        stepFragment = new StepFragment();
+        try {
+            MapsInitializer.initialize(this);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+        getSupportFragmentManager().beginTransaction().add(R.id.layout_content, mapFragment,
+                mapFragment.getClass().getName()).add(R.id.layout_content, stepFragment,
+                stepFragment.getClass().getName()).show(stepFragment).commit();
+        mAMap = mapFragment.getMap();
+        initMap();
+        locateCurrent();
         setupService();
     }
 
+    private void initMap() {
+        mAMap.getUiSettings().setRotateGesturesEnabled(false);
+        mAMap.getUiSettings().setZoomControlsEnabled(false);
+        mAMap.setMapCustomEnable(true);
+        mAMap.setCustomMapStylePath("/sdcard/config_theme.data");
+        mAMap.setOnMyLocationChangeListener(new AMap.OnMyLocationChangeListener() {
+            @Override
+            public void onMyLocationChange(final Location location) {
+                //设置地图初始zoomlevel和中心点
+                if (isSet) {
+                    return;
+                }
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mAMap.moveCamera(CameraUpdateFactory.newCameraPosition(
+                                new CameraPosition.Builder().zoom(15).target(new LatLng(
+                                        location.getLatitude(), location.getLongitude()
+                                )).build()
+                        ));
+                        isSet = true;
+                    }
+                }, 50);
+            }
+        });
+    }
+
+    private void locateCurrent() {
+        // 自定义定位蓝点图标
+        myLocationStyle = new MyLocationStyle();
+        myLocationStyle.myLocationIcon(
+                BitmapDescriptorFactory.fromResource(R.drawable.gps_point));
+        // 自定义精度范围的圆形边框颜色
+        myLocationStyle.strokeColor(Color.argb(0, 0, 0, 0));
+        // 自定义精度范围的圆形边框宽度
+        myLocationStyle.strokeWidth(0);
+        // 设置圆形的填充颜色
+        myLocationStyle.radiusFillColor(Color.argb(0, 0, 0, 0));
+        //设置首次定位模式
+        myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_FOLLOW_NO_CENTER);
+        // 将自定义的 myLocationStyle 对象添加到地图上
+        myLocationStyle.showMyLocation(true);
+        mAMap.setMyLocationStyle(myLocationStyle);
+        mAMap.setMyLocationEnabled(true);// 设置为true表示显示定位层并可触发定位，false表示隐藏定位层并不可触发定位，默认是false
+        // 设置定位的类型为定位模式 ，可以由定位、跟随或地图根据面向方向旋转几种
+    }
 
     private boolean isBind = false;
 
@@ -90,15 +148,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         public void onServiceConnected(ComponentName name, IBinder service) {
             StepService stepService = ((StepService.StepBinder) service).getService();
             //设置初始化数据
-            String planWalk_QTY = (String) sp.getParam("planWalk_QTY", "7000");
-            cc.setCurrentCount(Integer.parseInt(planWalk_QTY), stepService.getStepCount());
+            if (stepFragment != null) {
+                stepFragment.setStepCount(stepService.getStepCount());
+            }
 
             //设置步数监听回调
             stepService.registerCallback(new UpdateUiCallBack() {
                 @Override
                 public void updateUi(int stepCount) {
-                    String planWalk_QTY = (String) sp.getParam("planWalk_QTY", "7000");
-                    cc.setCurrentCount(Integer.parseInt(planWalk_QTY), stepCount);
+                    if (stepFragment != null) {
+                        stepFragment.setStepCount(stepCount);
+                    }
+                }
+
+                @Override
+                public boolean onUpdate(List<LatLng> locations) {
+                    if (locations != null && locations.size() > 0) {
+                        Polyline polyline = mAMap.addPolyline(new PolylineOptions().
+                                addAll(locations).width(14).color(Color.argb(255, 1, 1, 1)));
+                        if (polyline != null) {
+                            return true;
+                        }
+                    }
+                    return false;
                 }
             });
         }
@@ -115,20 +187,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
-
     @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-//            case R.id.tv_set:
-//                startActivity(new Intent(this, SetPlanActivity.class));
-//                break;
-//            case R.id.tv_data:
-//                startActivity(new Intent(this, HistoryActivity.class));
-//                break;
-            case R.id.iv_show_map:
-                startActivity(new Intent(this, MapActivity.class));
-                break;
+    public void onBackPressed() {
+        if (curFragment == mapFragment) {
+            changeToStepPage();
+            return;
         }
+        super.onBackPressed();
+    }
+
+    private void changeToStepPage() {
+        getSupportFragmentManager().beginTransaction().show(stepFragment).hide(mapFragment).commit();
+        curFragment = stepFragment;
     }
 
     @Override
@@ -137,5 +207,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (isBind) {
             this.unbindService(conn);
         }
+    }
+
+    private Fragment curFragment = stepFragment;
+
+    public void changeToTargetPage() {
+//        if (fragment == mapFragment) {
+        getSupportFragmentManager().beginTransaction().show(mapFragment).hide(stepFragment).commit();
+        curFragment = mapFragment;
+//        } else {
+//            getSupportFragmentManager().beginTransaction().show(stepFragment).hide(mapFragment).commit();
+//            curFragment = stepFragment;
+//        }
     }
 }

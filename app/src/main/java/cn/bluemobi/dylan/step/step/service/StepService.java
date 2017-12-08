@@ -18,10 +18,17 @@ import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.amap.api.location.AMapLocation;
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationClientOption;
+import com.amap.api.location.AMapLocationListener;
+import com.amap.api.maps.model.LatLng;
 import com.orhanobut.logger.Logger;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -33,7 +40,7 @@ import cn.bluemobi.dylan.step.step.accelerometer.StepValuePassListener;
 import cn.bluemobi.dylan.step.step.bean.StepData;
 import cn.bluemobi.dylan.step.step.utils.DbUtils;
 
-public class StepService extends Service implements SensorEventListener {
+public class StepService extends Service implements SensorEventListener, AMapLocationListener {
     private String TAG = "StepService";
     /**
      * 默认为30秒进行一次存储
@@ -92,6 +99,9 @@ public class StepService extends Service implements SensorEventListener {
      */
     private NotificationCompat.Builder mBuilder;
 
+    private AMapLocationClient mLocationClient;
+    private List<LatLng> positions = null;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -105,7 +115,17 @@ public class StepService extends Service implements SensorEventListener {
             }
         }).start();
         startTimeCount();
+        mLocationClient = new AMapLocationClient(this);
+        mLocationClient.setLocationOption(getLocationOption());
+        mLocationClient.setLocationListener(this);
+        mLocationClient.startLocation();
+    }
 
+    private AMapLocationClientOption getLocationOption() {
+        AMapLocationClientOption option = new AMapLocationClientOption();
+        option.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
+
+        return option;
     }
 
     /**
@@ -347,6 +367,26 @@ public class StepService extends Service implements SensorEventListener {
     @Override
     public IBinder onBind(Intent intent) {
         return stepBinder;
+    }
+
+    @Override
+    public void onLocationChanged(AMapLocation aMapLocation) {
+        if (aMapLocation != null && aMapLocation.getErrorCode() == 0) {
+            LatLng curPosition = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
+            if (positions == null) {
+                positions = new ArrayList<LatLng>();
+            }
+            positions.add(curPosition);
+            //累计点数大于5个后开始绘制该段路径
+            if (positions.size() >= 5 && mCallback != null) {
+                if (mCallback.onUpdate(positions)) {
+                    positions.clear();
+                    positions.add(curPosition);
+                }
+            }
+        } else {
+            Toast.makeText(this, "当前GPS信号弱,轨迹精确度可能会下降！", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**

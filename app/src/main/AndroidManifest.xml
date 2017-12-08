@@ -103,10 +103,12 @@
         </service>
 
         <service android:name="com.amap.api.location.APSService" />
+        <service android:name=".service.LocationUpdateService" />
 
         <activity
             android:name=".activity.MapActivity"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+            android:launchMode="singleInstance"/>
     </application>
 
 </manifest>
