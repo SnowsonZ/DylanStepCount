@@ -196,6 +196,7 @@ public class MainActivity extends FragmentActivity {
                 public boolean onUpdate(List<LatLng> locations) {
                     if (locations != null && locations.size() > 0) {
                         PolylineOptions po = new PolylineOptions();
+                        po.addAll(locations);
                         po.width(20);
                         //设置纹理
                         po.setCustomTexture(BitmapDescriptorFactory.fromResource(R.drawable.map_alr));

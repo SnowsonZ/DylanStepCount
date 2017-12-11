@@ -41,13 +41,13 @@ public class AssetsCopy {
                             copyAssets(context, fileName, targetPath);
                         } else {
                             InputStream is = am.open(fileName);
-                            writeFile(targetPath + File.separator + fileName, is);
+                            writeFile(targetPath, is);
                         }
                     }
                 }
             } else {
-                InputStream is = am.open("/" + assetsPath);
-                writeFile(targetPath + File.separator + assetsPath, is);
+                InputStream is = am.open(assetsPath);
+                writeFile(targetPath, is);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -57,6 +57,13 @@ public class AssetsCopy {
     private static boolean writeFile(String fileName, InputStream in) throws IOException {
         boolean bRet = true;
         try {
+            File file = new File(fileName.substring(0, fileName.lastIndexOf("/")));
+            if (!file.exists() || !file.isDirectory()) {
+                boolean mkdirs = file.mkdirs();
+                if (!mkdirs) {
+                    return false;
+                }
+            }
             OutputStream os = new FileOutputStream(fileName);
             byte[] buffer = new byte[4096];
             int read;
