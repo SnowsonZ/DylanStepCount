@@ -1,18 +1,24 @@
 package cn.bluemobi.dylan.step.activity;
 
+import android.Manifest;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
 import android.view.View;
 
 import com.amap.api.maps.AMap;
@@ -36,6 +42,7 @@ import cn.bluemobi.dylan.step.app.MyApplication;
 import cn.bluemobi.dylan.step.fragment.StepFragment;
 import cn.bluemobi.dylan.step.step.UpdateUiCallBack;
 import cn.bluemobi.dylan.step.step.service.StepService;
+import cn.bluemobi.dylan.step.utils.trancesmooth.PathSmoothTool;
 
 /**
  * 记步主页
@@ -50,23 +57,11 @@ public class MainActivity extends FragmentActivity {
     private Intent intent_service;
 
     private static int RES_READY = 1;
-    private Handler mainHandler;
     private SoftReference<MainActivity> mContext;
-
-    private static class MainHandler extends Handler {
-        private MainActivity mContext;
-
-        public MainHandler(SoftReference<MainActivity> context) {
-            this.mContext = context.get();
-        }
-
-        @Override
-        public void dispatchMessage(Message msg) {
-            super.dispatchMessage(msg);
-            if (mContext != null && msg.what == RES_READY) {
-            }
-        }
-    }
+    private static final int LOCATION_PERMISSION_CODE = 1;
+    private String[] permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE,
+            Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,11 +69,21 @@ public class MainActivity extends FragmentActivity {
         setContentView(R.layout.main_layout);
         mAppContext = (MyApplication) getApplicationContext();
         mContext = new SoftReference<MainActivity>(this);
-        mainHandler = new MainHandler(mContext);
         initFragment();
-        initMap();
-        locateCurrent();
-        setupService();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, permissions, LOCATION_PERMISSION_CODE);
+            } else {
+                initMap();
+                locateCurrent();
+                setupService();
+            }
+        } else {
+            initMap();
+            locateCurrent();
+            setupService();
+        }
     }
 
     private AMapOptions getMapOptions() {
@@ -198,8 +203,13 @@ public class MainActivity extends FragmentActivity {
                         if (stepFragment != null) {
                             stepFragment.setWaringVisiable(View.GONE);
                         }
+
+                        PathSmoothTool pst = new PathSmoothTool();
+                        pst.setIntensity(4);
+                        List<LatLng> optimizeList = pst.pathOptimize(locations);
+
                         PolylineOptions po = new PolylineOptions();
-                        po.addAll(locations);
+                        po.addAll(optimizeList);
                         po.width(20);
                         //设置纹理
                         po.setCustomTexture(BitmapDescriptorFactory.fromResource(R.drawable.map_alr));
@@ -267,4 +277,11 @@ public class MainActivity extends FragmentActivity {
         curFragment = stepFragment;
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        initMap();
+        locateCurrent();
+        setupService();
+    }
 }
