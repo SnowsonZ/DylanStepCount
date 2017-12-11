@@ -25,7 +25,7 @@ public class StepFragment extends Fragment {
     private StepArcView cc;
     private SharedPreferencesUtils sp;
     private CircleImageView iv_show_map;
-    private TextView tv_isSupport;
+    private TextView tv_isSupport, tv_waring;
 
     @Nullable
     @Override
@@ -34,6 +34,7 @@ public class StepFragment extends Fragment {
         cc = (StepArcView) viewContent.findViewById(R.id.cc);
         tv_isSupport = (TextView) viewContent.findViewById(R.id.tv_isSupport);
         iv_show_map = (CircleImageView) viewContent.findViewById(R.id.iv_show_map);
+        tv_waring = (TextView) viewContent.findViewById(R.id.tv_info);
         initData();
         initListener();
         return viewContent;
@@ -62,5 +63,9 @@ public class StepFragment extends Fragment {
     public void setStepCount(int stepCount) {
         String planWalk_QTY = (String) sp.getParam("planWalk_QTY", "7000");
         cc.setCurrentCount(Integer.parseInt(planWalk_QTY), stepCount);
+    }
+
+    public void setWaringVisiable(int visiable) {
+        tv_waring.setVisibility(visiable);
     }
 }

@@ -12,7 +12,6 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentTop="true">
-        <!--android:background="@mipmap/step_bg"-->
 
         <TextView
             android:id="@+id/tv_data"
@@ -28,6 +27,17 @@
             android:text="查看历史步数"
             android:textColor="#333333"
             android:visibility="gone" />
+
+        <TextView
+            android:visibility="gone"
+            android:id="@+id/tv_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@id/cc"
+            android:layout_centerHorizontal="true"
+            android:text="当前GPS信号弱，结果可能不准确"
+            android:textColor="#f00"
+            android:textSize="12sp" />
 
         <cn.bluemobi.dylan.step.view.StepArcView
             android:id="@+id/cc"

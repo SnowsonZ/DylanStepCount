@@ -13,6 +13,7 @@ import android.os.Message;
 import android.os.RemoteException;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
+import android.view.View;
 
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMapOptions;
@@ -35,7 +36,6 @@ import cn.bluemobi.dylan.step.app.MyApplication;
 import cn.bluemobi.dylan.step.fragment.StepFragment;
 import cn.bluemobi.dylan.step.step.UpdateUiCallBack;
 import cn.bluemobi.dylan.step.step.service.StepService;
-import cn.bluemobi.dylan.step.utils.AssetsCopy;
 
 /**
  * 记步主页
@@ -195,6 +195,9 @@ public class MainActivity extends FragmentActivity {
                 @Override
                 public boolean onUpdate(List<LatLng> locations) {
                     if (locations != null && locations.size() > 0) {
+                        if (stepFragment != null) {
+                            stepFragment.setWaringVisiable(View.GONE);
+                        }
                         PolylineOptions po = new PolylineOptions();
                         po.addAll(locations);
                         po.width(20);
@@ -206,6 +209,13 @@ public class MainActivity extends FragmentActivity {
                         }
                     }
                     return false;
+                }
+
+                @Override
+                public void onLocationSignalWeak() {
+                    if (stepFragment != null) {
+                        stepFragment.setWaringVisiable(View.VISIBLE);
+                    }
                 }
             });
         }

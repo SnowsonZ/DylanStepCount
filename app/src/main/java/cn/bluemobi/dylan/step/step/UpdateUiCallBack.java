@@ -17,4 +17,6 @@ public interface UpdateUiCallBack {
     void updateUi(int stepCount);
 
     boolean onUpdate(List<LatLng> locations);
+
+    void onLocationSignalWeak();
 }

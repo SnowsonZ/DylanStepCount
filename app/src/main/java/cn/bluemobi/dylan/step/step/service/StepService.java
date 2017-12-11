@@ -396,7 +396,9 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
                 }
             }
         } else {
-            Toast.makeText(this, "当前GPS信号弱,轨迹精确度可能会下降！", Toast.LENGTH_SHORT).show();
+            if (mCallback != null) {
+                mCallback.onLocationSignalWeak();
+            }
         }
     }
 
