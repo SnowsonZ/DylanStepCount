@@ -35,6 +35,7 @@
     <!--用于申请获取蓝牙信息进行室内定位-->
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <uses-feature
         android:name="android.hardware.sensor.stepcounter"
@@ -107,8 +108,8 @@
 
         <activity
             android:name=".activity.MapActivity"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
-            android:launchMode="singleInstance"/>
+            android:launchMode="singleInstance"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
     </application>
 
 </manifest>

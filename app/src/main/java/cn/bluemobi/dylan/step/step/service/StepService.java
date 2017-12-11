@@ -24,6 +24,8 @@ import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
+import com.amap.api.location.CoordinateConverter;
+import com.amap.api.location.DPoint;
 import com.amap.api.maps.model.LatLng;
 import com.orhanobut.logger.Logger;
 
@@ -101,6 +103,12 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
 
     private AMapLocationClient mLocationClient;
     private List<LatLng> positions = null;
+    private LatLng lastPosition;
+
+    /**
+     * 两点间距离最大值，超过该值说明该点是误差点，舍去
+     */
+    private static final int MAX_DISTANCE = 5;
 
     @Override
     public void onCreate() {
@@ -376,16 +384,34 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
             if (positions == null) {
                 positions = new ArrayList<LatLng>();
             }
-            positions.add(curPosition);
-            //累计点数大于5个后开始绘制该段路径
-            if (positions.size() >= 5 && mCallback != null) {
-                if (mCallback.onUpdate(positions)) {
-                    positions.clear();
-                    positions.add(curPosition);
+            if (isUseful(curPosition)) {
+                positions.add(curPosition);
+                lastPosition = curPosition;
+                //累计点数大于5个后开始绘制该段路径
+                if (positions.size() >= 5 && mCallback != null) {
+                    if (mCallback.onUpdate(positions)) {
+                        positions.clear();
+                        positions.add(curPosition);
+                    }
                 }
             }
         } else {
             Toast.makeText(this, "当前GPS信号弱,轨迹精确度可能会下降！", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private boolean isUseful(LatLng curLatLng) {
+
+        if (lastPosition == null) {
+            lastPosition = curLatLng;
+            return true;
+        }
+        DPoint last = new DPoint(lastPosition.latitude, lastPosition.longitude);
+        DPoint current = new DPoint(curLatLng.latitude, curLatLng.longitude);
+        if (CoordinateConverter.calculateLineDistance(last, current) > MAX_DISTANCE) {
+            return false;
+        } else {
+            return true;
         }
     }
 
@@ -596,6 +622,8 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
         DbUtils.closeDb();
         unregisterReceiver(mBatInfoReceiver);
         Logger.d("stepService关闭");
+        mLocationClient.stopLocation();
+        mLocationClient.onDestroy();
     }
 
     @Override

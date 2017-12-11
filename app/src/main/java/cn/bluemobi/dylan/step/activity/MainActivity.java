@@ -9,10 +9,10 @@ import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.os.RemoteException;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
-import android.support.v7.app.AppCompatActivity;
 
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMapOptions;
@@ -26,12 +26,16 @@ import com.amap.api.maps.model.MyLocationStyle;
 import com.amap.api.maps.model.Polyline;
 import com.amap.api.maps.model.PolylineOptions;
 
+import java.io.File;
+import java.lang.ref.SoftReference;
 import java.util.List;
 
 import cn.bluemobi.dylan.step.R;
+import cn.bluemobi.dylan.step.app.MyApplication;
 import cn.bluemobi.dylan.step.fragment.StepFragment;
 import cn.bluemobi.dylan.step.step.UpdateUiCallBack;
 import cn.bluemobi.dylan.step.step.service.StepService;
+import cn.bluemobi.dylan.step.utils.AssetsCopy;
 
 /**
  * 记步主页
@@ -42,12 +46,39 @@ public class MainActivity extends FragmentActivity {
     private AMap mAMap;
     private boolean isSet;
     private MyLocationStyle myLocationStyle;
+    private MyApplication mAppContext;
+    private Intent intent_service;
+
+    private static int RES_READY = 1;
+    private Handler mainHandler;
+    private SoftReference<MainActivity> mContext;
+
+    private static class MainHandler extends Handler {
+        private MainActivity mContext;
+
+        public MainHandler(SoftReference<MainActivity> context) {
+            this.mContext = context.get();
+        }
+
+        @Override
+        public void dispatchMessage(Message msg) {
+            super.dispatchMessage(msg);
+            if (mContext != null && msg.what == RES_READY) {
+            }
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_layout);
+        mAppContext = (MyApplication) getApplicationContext();
+        mContext = new SoftReference<MainActivity>(this);
+        mainHandler = new MainHandler(mContext);
         initFragment();
+        initMap();
+        locateCurrent();
+        setupService();
     }
 
     private AMapOptions getMapOptions() {
@@ -69,17 +100,16 @@ public class MainActivity extends FragmentActivity {
         getSupportFragmentManager().beginTransaction().add(R.id.layout_content, mapFragment,
                 mapFragment.getClass().getName()).add(R.id.layout_content, stepFragment,
                 stepFragment.getClass().getName()).show(stepFragment).commit();
-        mAMap = mapFragment.getMap();
-        initMap();
-        locateCurrent();
-        setupService();
     }
 
     private void initMap() {
+        if (mAMap == null) {
+            mAMap = mapFragment.getMap();
+        }
         mAMap.getUiSettings().setRotateGesturesEnabled(false);
         mAMap.getUiSettings().setZoomControlsEnabled(false);
         mAMap.setMapCustomEnable(true);
-        mAMap.setCustomMapStylePath("/sdcard/config_theme.data");
+        mAMap.setCustomMapStylePath(getFilesDir().getPath() + File.separator + MyApplication.MAP_THEME_DATA);
         mAMap.setOnMyLocationChangeListener(new AMap.OnMyLocationChangeListener() {
             @Override
             public void onMyLocationChange(final Location location) {
@@ -113,6 +143,7 @@ public class MainActivity extends FragmentActivity {
         myLocationStyle.strokeWidth(0);
         // 设置圆形的填充颜色
         myLocationStyle.radiusFillColor(Color.argb(0, 0, 0, 0));
+//        myLocationStyle.radiusFillColor(Color.argb(88, 24, 172, 255));
         //设置首次定位模式
         myLocationStyle.myLocationType(MyLocationStyle.LOCATION_TYPE_FOLLOW_NO_CENTER);
         // 将自定义的 myLocationStyle 对象添加到地图上
@@ -128,9 +159,9 @@ public class MainActivity extends FragmentActivity {
      * 开启计步服务
      */
     private void setupService() {
-        Intent intent = new Intent(this, StepService.class);
-        isBind = bindService(intent, conn, Context.BIND_AUTO_CREATE);
-        startService(intent);
+        intent_service = new Intent(this, StepService.class);
+        isBind = bindService(intent_service, conn, Context.BIND_AUTO_CREATE);
+        startService(intent_service);
     }
 
     /**
@@ -164,8 +195,11 @@ public class MainActivity extends FragmentActivity {
                 @Override
                 public boolean onUpdate(List<LatLng> locations) {
                     if (locations != null && locations.size() > 0) {
-                        Polyline polyline = mAMap.addPolyline(new PolylineOptions().
-                                addAll(locations).width(14).color(Color.argb(255, 1, 1, 1)));
+                        PolylineOptions po = new PolylineOptions();
+                        po.width(20);
+                        //设置纹理
+                        po.setCustomTexture(BitmapDescriptorFactory.fromResource(R.drawable.map_alr));
+                        Polyline polyline = mAMap.addPolyline(po);
                         if (polyline != null) {
                             return true;
                         }
@@ -192,13 +226,10 @@ public class MainActivity extends FragmentActivity {
         if (curFragment == mapFragment) {
             changeToStepPage();
             return;
+        } else {
+            //进入后台，返回桌面
+            moveTaskToBack(true);
         }
-        super.onBackPressed();
-    }
-
-    private void changeToStepPage() {
-        getSupportFragmentManager().beginTransaction().show(stepFragment).hide(mapFragment).commit();
-        curFragment = stepFragment;
     }
 
     @Override
@@ -206,18 +237,23 @@ public class MainActivity extends FragmentActivity {
         super.onDestroy();
         if (isBind) {
             this.unbindService(conn);
+            stopService(intent_service);
+        }
+        if (mAppContext != null) {
+            mAppContext.releaseSystemLock();
         }
     }
 
     private Fragment curFragment = stepFragment;
 
     public void changeToTargetPage() {
-//        if (fragment == mapFragment) {
         getSupportFragmentManager().beginTransaction().show(mapFragment).hide(stepFragment).commit();
         curFragment = mapFragment;
-//        } else {
-//            getSupportFragmentManager().beginTransaction().show(stepFragment).hide(mapFragment).commit();
-//            curFragment = stepFragment;
-//        }
     }
+
+    private void changeToStepPage() {
+        getSupportFragmentManager().beginTransaction().show(stepFragment).hide(mapFragment).commit();
+        curFragment = stepFragment;
+    }
+
 }
