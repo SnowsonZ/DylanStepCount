@@ -204,13 +204,13 @@ public class MainActivity extends FragmentActivity {
                             stepFragment.setWaringVisiable(View.GONE);
                         }
 
-                        PathSmoothTool pst = new PathSmoothTool();
-                        pst.setIntensity(4);
-                        List<LatLng> optimizeList = pst.pathOptimize(locations);
+//                        PathSmoothTool pst = new PathSmoothTool();
+//                        pst.setIntensity(4);
+//                        List<LatLng> optimizeList = pst.pathOptimize(locations);
 
                         PolylineOptions po = new PolylineOptions();
-                        po.addAll(optimizeList);
-                        po.width(20);
+                        po.addAll(locations);
+                        po.width(40);
                         //设置纹理
                         po.setCustomTexture(BitmapDescriptorFactory.fromResource(R.drawable.map_alr));
                         Polyline polyline = mAMap.addPolyline(po);

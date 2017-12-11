@@ -132,8 +132,7 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     private AMapLocationClientOption getLocationOption() {
         AMapLocationClientOption option = new AMapLocationClientOption();
         option.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
-        option.setInterval(1000);
-
+        option.setSensorEnable(true);
         return option;
     }
 
@@ -389,7 +388,7 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
                 positions.add(curPosition);
                 lastPosition = curPosition;
                 //累计点数大于10个后开始绘制该段路径
-                if (positions.size() >= 10 && mCallback != null) {
+                if (positions.size() >= 5 && mCallback != null) {
                     if (mCallback.onUpdate(positions)) {
                         positions.clear();
                         positions.add(curPosition);
