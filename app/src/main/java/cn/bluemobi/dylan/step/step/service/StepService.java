@@ -375,12 +375,10 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
         return stepBinder;
     }
 
-    private int index = 0;
-
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if (aMapLocation != null && aMapLocation.getErrorCode() == 0) {
-            LatLng curPosition = new LatLng(aMapLocation.getLatitude() + 0.00003 * index, aMapLocation.getLongitude() + 0.00003 * index);
+            LatLng curPosition = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
             if (positions == null) {
                 positions = new ArrayList<LatLng>();
             }
@@ -395,7 +393,6 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
                     }
                 }
             }
-            index++;
         } else {
             if (mCallback != null) {
                 mCallback.onLocationSignalWeak();
