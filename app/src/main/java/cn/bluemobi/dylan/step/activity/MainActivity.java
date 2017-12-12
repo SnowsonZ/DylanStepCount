@@ -12,7 +12,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
@@ -42,7 +41,6 @@ import cn.bluemobi.dylan.step.app.MyApplication;
 import cn.bluemobi.dylan.step.fragment.StepFragment;
 import cn.bluemobi.dylan.step.step.UpdateUiCallBack;
 import cn.bluemobi.dylan.step.step.service.StepService;
-import cn.bluemobi.dylan.step.utils.trancesmooth.PathSmoothTool;
 
 /**
  * 记步主页
@@ -113,6 +111,7 @@ public class MainActivity extends FragmentActivity {
         }
         mAMap.getUiSettings().setRotateGesturesEnabled(false);
         mAMap.getUiSettings().setZoomControlsEnabled(false);
+        mAMap.getUiSettings().setMyLocationButtonEnabled(true);
         mAMap.setMapCustomEnable(true);
         mAMap.setCustomMapStylePath(getFilesDir().getPath() + File.separator + MyApplication.MAP_THEME_DATA);
         mAMap.setOnMyLocationChangeListener(new AMap.OnMyLocationChangeListener() {

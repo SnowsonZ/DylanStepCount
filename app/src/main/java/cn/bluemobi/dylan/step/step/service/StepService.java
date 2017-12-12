@@ -18,14 +18,12 @@ import android.os.CountDownTimer;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
-import com.amap.api.location.CoordinateConverter;
-import com.amap.api.location.DPoint;
+import com.amap.api.maps.AMapUtils;
 import com.amap.api.maps.model.LatLng;
 import com.orhanobut.logger.Logger;
 
@@ -108,7 +106,7 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     /**
      * 两点间距离最大值，超过该值说明该点是误差点，舍去
      */
-    private static final int MAX_DISTANCE = 5;
+    private static final int MAX_DISTANCE = 10;
 
     @Override
     public void onCreate() {
@@ -377,17 +375,19 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
         return stepBinder;
     }
 
+    private int index = 0;
+
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if (aMapLocation != null && aMapLocation.getErrorCode() == 0) {
-            LatLng curPosition = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
+            LatLng curPosition = new LatLng(aMapLocation.getLatitude() + 0.00003 * index, aMapLocation.getLongitude() + 0.00003 * index);
             if (positions == null) {
                 positions = new ArrayList<LatLng>();
             }
             if (isUseful(curPosition)) {
                 positions.add(curPosition);
                 lastPosition = curPosition;
-                //累计点数大于10个后开始绘制该段路径
+                //累计点数大于5个后开始绘制该段路径
                 if (positions.size() >= 5 && mCallback != null) {
                     if (mCallback.onUpdate(positions)) {
                         positions.clear();
@@ -395,6 +395,7 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
                     }
                 }
             }
+            index++;
         } else {
             if (mCallback != null) {
                 mCallback.onLocationSignalWeak();
@@ -408,9 +409,8 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
             lastPosition = curLatLng;
             return true;
         }
-        DPoint last = new DPoint(lastPosition.latitude, lastPosition.longitude);
-        DPoint current = new DPoint(curLatLng.latitude, curLatLng.longitude);
-        if (CoordinateConverter.calculateLineDistance(last, current) > MAX_DISTANCE) {
+
+        if (AMapUtils.calculateLineDistance(lastPosition, curLatLng) > MAX_DISTANCE) {
             return false;
         } else {
             return true;
