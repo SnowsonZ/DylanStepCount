@@ -12,7 +12,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.RemoteException;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
@@ -23,7 +22,6 @@ import android.view.View;
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMapOptions;
 import com.amap.api.maps.CameraUpdateFactory;
-import com.amap.api.maps.MapsInitializer;
 import com.amap.api.maps.SupportMapFragment;
 import com.amap.api.maps.model.BitmapDescriptorFactory;
 import com.amap.api.maps.model.CameraPosition;
@@ -68,6 +66,11 @@ public class MainActivity extends FragmentActivity {
         mAppContext = (MyApplication) getApplicationContext();
         mContext = new SoftReference<MainActivity>(this);
         initFragment();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -95,11 +98,11 @@ public class MainActivity extends FragmentActivity {
     private void initFragment() {
         mapFragment = SupportMapFragment.newInstance(getMapOptions());
         stepFragment = new StepFragment();
-        try {
-            MapsInitializer.initialize(this);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            MapsInitializer.initialize(this);
+//        } catch (RemoteException e) {
+//            e.printStackTrace();
+//        }
         getSupportFragmentManager().beginTransaction().add(R.id.layout_content, mapFragment,
                 mapFragment.getClass().getName()).add(R.id.layout_content, stepFragment,
                 stepFragment.getClass().getName()).show(stepFragment).commit();

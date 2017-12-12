@@ -8,8 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.amap.api.maps.MapFragment;
-
 import cn.bluemobi.dylan.step.R;
 import cn.bluemobi.dylan.step.activity.MainActivity;
 import cn.bluemobi.dylan.step.step.utils.SharedPreferencesUtils;

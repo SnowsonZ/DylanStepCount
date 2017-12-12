@@ -16,7 +16,7 @@ import cn.bluemobi.dylan.step.utils.AssetsCopy;
 public class MyApplication extends Application {
 
     private WakeLock mWakeLock;
-//    public static final String MAP_THEME_DATA = "text";
+    //    public static final String MAP_THEME_DATA = "text";
     public static final String MAP_THEME_DATA = "map_theme/config_theme.data";
 
     @Override
