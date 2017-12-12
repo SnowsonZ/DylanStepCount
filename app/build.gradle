@@ -5,13 +5,13 @@ android {
         release {
             keyAlias 'debug'
             keyPassword '000000'
-            storeFile file('/home/snowson/work/keystore/debug.jks')
+            storeFile file('../debug.jks')
             storePassword '000000'
         }
         debug {
             keyAlias 'debug'
             keyPassword '000000'
-            storeFile file('/home/snowson/work/keystore/debug.jks')
+            storeFile file('../debug.jks')
             storePassword '000000'
         }
     }
