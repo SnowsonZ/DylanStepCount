@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Environment;
 import android.text.TextUtils;
 
-import com.amap.api.maps.AMapUtils;
 import com.amap.api.maps.model.LatLng;
 
 import java.io.BufferedOutputStream;
@@ -86,7 +85,8 @@ public class LogUtils {
         }
     }
 
-    public static StringBuffer textLogStyle(StringBuffer sb, LatLng curLatLng, LatLng lastLatLng) {
+    public static StringBuffer textLogStyle(
+            StringBuffer sb, LatLng curLatLng, LatLng lastLatLng, float distance) {
         if (sb == null || curLatLng == null || lastLatLng == null) {
             return null;
         }
@@ -94,7 +94,7 @@ public class LogUtils {
                 + "\n");
         sb.append("Last Lat: " + lastLatLng.latitude + ", Last Lon: " + lastLatLng.longitude
                 + "\n");
-        sb.append("本次行走距离: " + AMapUtils.calculateLineDistance(lastLatLng, curLatLng) + "米\n");
+        sb.append("本次行走距离: " + distance + "米\n");
         sb.append("----------------------------------------------------------------\n");
 
         return sb;

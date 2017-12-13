@@ -107,7 +107,8 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     /**
      * 两点间距离最大值，超过该值说明该点是误差点，舍去
      */
-    private static final int MAX_DISTANCE = 10;
+    private static final float MAX_DISTANCE = 100;
+    private static final float MIN_DISTANCE = 0.1f;
 
     @Override
     public void onCreate() {
@@ -407,25 +408,27 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     private boolean isUseful(LatLng curLatLng) {
 
         if (sb == null) {
-            sb = new StringBuffer("UTF-8");
+            sb = new StringBuffer();
         }
         if (lastPosition == null) {
             lastPosition = curLatLng;
             //记录当前及上一个位置GPS
-            LogUtils.textLogStyle(sb, curLatLng, lastPosition);
+            LogUtils.textLogStyle(sb, curLatLng, lastPosition, 0);
             return true;
         }
 
         //记录当前及上一个位置GPS
-        LogUtils.textLogStyle(sb, curLatLng, lastPosition);
+        float curDistance = AMapUtils.calculateLineDistance(lastPosition, curLatLng);
+        LogUtils.textLogStyle(sb, curLatLng, lastPosition, curDistance);
 
         String curInfo = sb.toString();
-        if (curInfo.length() > 100) {
-            LogUtils.saveDebugInfoToLocal(this, curInfo, LogUtils.DEBUG_DIR, LogUtils.DEBUG_FILE_NAME);
-            sb.delete(0, sb.length() - 1);
+        if (curInfo.length() > 300) {
+            LogUtils.saveDebugInfoToLocal(this,
+                    curInfo, LogUtils.DEBUG_DIR, LogUtils.DEBUG_FILE_NAME);
+            sb.setLength(0);
         }
 
-        if (AMapUtils.calculateLineDistance(lastPosition, curLatLng) > MAX_DISTANCE) {
+        if (curDistance > MAX_DISTANCE || curDistance < MIN_DISTANCE) {
             return false;
         } else {
             return true;
