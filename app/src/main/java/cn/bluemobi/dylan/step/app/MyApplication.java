@@ -2,12 +2,14 @@ package cn.bluemobi.dylan.step.app;
 
 import android.app.Application;
 import android.content.Context;
+import android.os.Environment;
 import android.os.PowerManager;
 import android.os.PowerManager.WakeLock;
 
 import java.io.File;
 
 import cn.bluemobi.dylan.step.utils.AssetsCopy;
+import cn.bluemobi.dylan.step.utils.LogUtils;
 
 /**
  * Created by yuandl on 2016-10-18.
@@ -22,6 +24,7 @@ public class MyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        deleteDebugFiel();
         acquireSystemLock();
         AssetsCopy.copyAssets(this, MAP_THEME_DATA,
                 getFilesDir().getPath() + File.separator + MAP_THEME_DATA);
@@ -42,6 +45,15 @@ public class MyApplication extends Application {
         if (mWakeLock != null) {
             mWakeLock.release();
             mWakeLock = null;
+        }
+    }
+
+    private void deleteDebugFiel() {
+        File file = new File(
+                Environment.getExternalStorageDirectory().getAbsolutePath()
+                        + File.separator + LogUtils.DEBUG_DIR, LogUtils.DEBUG_FILE_NAME);
+        if (file.exists()) {
+            file.delete();
         }
     }
 }

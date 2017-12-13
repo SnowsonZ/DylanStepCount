@@ -399,6 +399,9 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
                 }
             }
         } else {
+            if (sb != null) {
+                LogUtils.textError(sb, aMapLocation.getErrorCode(), aMapLocation.getErrorInfo());
+            }
             if (mCallback != null) {
                 mCallback.onLocationSignalWeak();
             }

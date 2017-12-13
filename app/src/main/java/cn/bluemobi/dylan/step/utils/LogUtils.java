@@ -99,4 +99,14 @@ public class LogUtils {
 
         return sb;
     }
+
+    public static StringBuffer textError(StringBuffer sb, int errorCode, String errorMsg) {
+        if (sb == null) {
+            return null;
+        }
+        sb.append("ErrorCode: " + errorCode + ", Error: " + errorMsg + "\n");
+        sb.append("----------------------------------------------------------------\n");
+
+        return sb;
+    }
 }
