@@ -39,6 +39,7 @@ import cn.bluemobi.dylan.step.step.accelerometer.StepCount;
 import cn.bluemobi.dylan.step.step.accelerometer.StepValuePassListener;
 import cn.bluemobi.dylan.step.step.bean.StepData;
 import cn.bluemobi.dylan.step.step.utils.DbUtils;
+import cn.bluemobi.dylan.step.utils.LogUtils;
 
 public class StepService extends Service implements SensorEventListener, AMapLocationListener {
     private String TAG = "StepService";
@@ -375,6 +376,9 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
         return stepBinder;
     }
 
+    //记录debug info
+    private StringBuffer sb;
+
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if (aMapLocation != null && aMapLocation.getErrorCode() == 0) {
@@ -402,9 +406,23 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
 
     private boolean isUseful(LatLng curLatLng) {
 
+        if (sb == null) {
+            sb = new StringBuffer("UTF-8");
+        }
         if (lastPosition == null) {
             lastPosition = curLatLng;
+            //记录当前及上一个位置GPS
+            LogUtils.textLogStyle(sb, curLatLng, lastPosition);
             return true;
+        }
+
+        //记录当前及上一个位置GPS
+        LogUtils.textLogStyle(sb, curLatLng, lastPosition);
+
+        String curInfo = sb.toString();
+        if (curInfo.length() > 100) {
+            LogUtils.saveDebugInfoToLocal(this, curInfo, LogUtils.DEBUG_DIR, LogUtils.DEBUG_FILE_NAME);
+            sb.delete(0, sb.length() - 1);
         }
 
         if (AMapUtils.calculateLineDistance(lastPosition, curLatLng) > MAX_DISTANCE) {

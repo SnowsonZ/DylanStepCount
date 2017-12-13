@@ -58,6 +58,7 @@ public class MainActivity extends FragmentActivity {
     private String[] permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE,
             Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.READ_PHONE_STATE};
+    private static final int MAP_DELAY_TIME = 50;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -128,13 +129,13 @@ public class MainActivity extends FragmentActivity {
                     @Override
                     public void run() {
                         mAMap.moveCamera(CameraUpdateFactory.newCameraPosition(
-                                new CameraPosition.Builder().zoom(15).target(new LatLng(
+                                new CameraPosition.Builder().zoom(16).target(new LatLng(
                                         location.getLatitude(), location.getLongitude()
                                 )).build()
                         ));
                         isSet = true;
                     }
-                }, 50);
+                }, MAP_DELAY_TIME);
             }
         });
     }
