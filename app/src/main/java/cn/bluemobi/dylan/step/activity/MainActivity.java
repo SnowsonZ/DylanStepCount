@@ -17,7 +17,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.ContextCompat;
-import android.view.View;
 
 import com.amap.api.maps.AMap;
 import com.amap.api.maps.AMapOptions;
@@ -99,6 +98,7 @@ public class MainActivity extends FragmentActivity {
     private void initFragment() {
         mapFragment = SupportMapFragment.newInstance(getMapOptions());
         stepFragment = new StepFragment();
+        //强制实例化地图容器
 //        try {
 //            MapsInitializer.initialize(this);
 //        } catch (RemoteException e) {
@@ -117,7 +117,8 @@ public class MainActivity extends FragmentActivity {
         mAMap.getUiSettings().setZoomControlsEnabled(false);
         mAMap.getUiSettings().setMyLocationButtonEnabled(true);
         mAMap.setMapCustomEnable(true);
-        mAMap.setCustomMapStylePath(getFilesDir().getPath() + File.separator + MyApplication.MAP_THEME_DATA);
+        mAMap.setCustomMapStylePath(getFilesDir().getPath()
+                + File.separator + MyApplication.MAP_THEME_DATA);
         mAMap.setOnMyLocationChangeListener(new AMap.OnMyLocationChangeListener() {
             @Override
             public void onMyLocationChange(final Location location) {
@@ -204,7 +205,7 @@ public class MainActivity extends FragmentActivity {
                 public boolean onUpdate(List<LatLng> locations) {
                     if (locations != null && locations.size() > 0) {
                         if (stepFragment != null) {
-                            stepFragment.setWaringVisiable(View.GONE);
+                            stepFragment.setWaringInfo(null);
                         }
 
 //                        PathSmoothTool pst = new PathSmoothTool();
@@ -225,9 +226,9 @@ public class MainActivity extends FragmentActivity {
                 }
 
                 @Override
-                public void onLocationSignalWeak() {
+                public void onLocationSignalWeak(String waringMsg) {
                     if (stepFragment != null) {
-                        stepFragment.setWaringVisiable(View.VISIBLE);
+                        stepFragment.setWaringInfo(waringMsg);
                     }
                 }
             });

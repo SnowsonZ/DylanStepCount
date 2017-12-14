@@ -109,4 +109,13 @@ public class LogUtils {
 
         return sb;
     }
+
+    public static StringBuffer locationIgnore(StringBuffer sb) {
+        if (sb == null) {
+            return null;
+        }
+        sb.append("网络定位请求低于1秒、或两次定位之间设备位置变化非常小时返回，设备位移通过传感器感知\n");
+
+        return sb;
+    }
 }

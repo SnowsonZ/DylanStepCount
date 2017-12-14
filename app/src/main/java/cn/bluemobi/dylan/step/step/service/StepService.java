@@ -107,8 +107,10 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     /**
      * 两点间距离最大值，超过该值说明该点是误差点，舍去
      */
-    private static final float MAX_DISTANCE = 100;
+    private static final float MAX_DISTANCE = 1000;
     private static final float MIN_DISTANCE = 0.1f;
+    private static final String WARING_GPS_STATUS = "当前GPS信号弱，结果可能不准确";
+    private static final String WARING_LOCATION_ERROR = "当前无GPS信号，定位失败";
 
     @Override
     public void onCreate() {
@@ -133,6 +135,7 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
         AMapLocationClientOption option = new AMapLocationClientOption();
         option.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
         option.setSensorEnable(true);
+        option.setInterval(3000);
         return option;
     }
 
@@ -368,7 +371,8 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
      * 点击去除： Notification.FLAG_AUTO_CANCEL
      */
     public PendingIntent getDefalutIntent(int flags) {
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 1, new Intent(), flags);
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this, 1, new Intent(), flags);
         return pendingIntent;
     }
 
@@ -383,15 +387,28 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if (aMapLocation != null && aMapLocation.getErrorCode() == 0) {
-            LatLng curPosition = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
+            //位置变化极小时忽略
+            if (aMapLocation.getLocationType() ==
+                    AMapLocation.LOCATION_TYPE_SAME_REQ && sb != null) {
+                Log.i(StepService.this.getClass().getName(), "网络定位请求低于1秒、" +
+                        "或两次定位之间设备位置变化非常小时返回，设备位移通过传感器感知");
+                LogUtils.locationIgnore(sb);
+                return;
+            }
+            if ((aMapLocation.getGpsAccuracyStatus()
+                    == AMapLocation.GPS_ACCURACY_BAD || aMapLocation.getGpsAccuracyStatus()
+                    == AMapLocation.GPS_ACCURACY_UNKNOWN) && mCallback != null) {
+                mCallback.onLocationSignalWeak(WARING_GPS_STATUS);
+            }
+            LatLng curPosition = new LatLng(
+                    aMapLocation.getLatitude(), aMapLocation.getLongitude());
             if (positions == null) {
                 positions = new ArrayList<LatLng>();
             }
             if (isUseful(curPosition)) {
                 positions.add(curPosition);
                 lastPosition = curPosition;
-                //累计点数大于5个后开始绘制该段路径
-                if (positions.size() >= 5 && mCallback != null) {
+                if (mCallback != null) {
                     if (mCallback.onUpdate(positions)) {
                         positions.clear();
                         positions.add(curPosition);
@@ -403,7 +420,7 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
                 LogUtils.textError(sb, aMapLocation.getErrorCode(), aMapLocation.getErrorInfo());
             }
             if (mCallback != null) {
-                mCallback.onLocationSignalWeak();
+                mCallback.onLocationSignalWeak(WARING_LOCATION_ERROR);
             }
         }
     }

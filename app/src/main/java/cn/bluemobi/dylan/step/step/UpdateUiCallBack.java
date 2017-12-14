@@ -18,5 +18,5 @@ public interface UpdateUiCallBack {
 
     boolean onUpdate(List<LatLng> locations);
 
-    void onLocationSignalWeak();
+    void onLocationSignalWeak(String waringMsg);
 }

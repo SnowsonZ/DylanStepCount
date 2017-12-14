@@ -35,7 +35,6 @@
             android:layout_height="wrap_content"
             android:layout_above="@id/cc"
             android:layout_centerHorizontal="true"
-            android:text="当前GPS信号弱，结果可能不准确"
             android:textColor="#f00"
             android:textSize="12sp" />
 
