@@ -390,11 +390,10 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
             //位置变化极小时忽略
             if (aMapLocation.getLocationType() ==
                     AMapLocation.LOCATION_TYPE_SAME_REQ && sb != null) {
-                Log.i(StepService.this.getClass().getName(), "网络定位请求低于1秒、" +
-                        "或两次定位之间设备位置变化非常小时返回，设备位移通过传感器感知");
                 LogUtils.locationIgnore(sb);
                 return;
             }
+            //当前GPS状态
             if ((aMapLocation.getGpsAccuracyStatus()
                     == AMapLocation.GPS_ACCURACY_BAD || aMapLocation.getGpsAccuracyStatus()
                     == AMapLocation.GPS_ACCURACY_UNKNOWN) && mCallback != null) {
