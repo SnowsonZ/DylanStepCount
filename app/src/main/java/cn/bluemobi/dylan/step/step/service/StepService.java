@@ -393,6 +393,10 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
 //            aMapLocation.setLongitude(curPosition.longitude);
             if (lastPosition == null) {
                 lastPosition = curPosition;
+                //首次定位
+                if (mCallback != null) {
+                    mCallback.onCurrentPosition(aMapLocation);
+                }
             }
             Log.i(StepService.this.getClass().getName(),
                     "定位类型: " + aMapLocation.getLocationType()
