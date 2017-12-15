@@ -429,12 +429,12 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
             if (positions == null) {
                 positions = new ArrayList<LatLng>();
             }
-            if (isUseful(curPosition) && positions.size() >= 3) {
+            if (isUseful(curPosition)) {
                 positions.add(curPosition);
                 lastPosition = curPosition;
                 if (mCallback != null) {
                     mCallback.onCurrentPosition(aMapLocation);
-                    if (mCallback.onUpdate(positions)) {
+                    if (positions.size() >= 3 && mCallback.onUpdate(positions)) {
                         positions.clear();
                         positions.add(curPosition);
                     }
