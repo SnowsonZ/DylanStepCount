@@ -134,8 +134,8 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     private AMapLocationClientOption getLocationOption() {
         AMapLocationClientOption option = new AMapLocationClientOption();
         option.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
-        option.setSensorEnable(true);
         option.setInterval(3000);
+        option.setLocationCacheEnable(false);
         return option;
     }
 
@@ -387,6 +387,27 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if (aMapLocation != null && aMapLocation.getErrorCode() == 0) {
+            LatLng curPosition = new LatLng(
+                    aMapLocation.getLatitude(), aMapLocation.getLongitude());
+//            aMapLocation.setLatitude(curPosition.latitude);
+//            aMapLocation.setLongitude(curPosition.longitude);
+            if (lastPosition == null) {
+                lastPosition = curPosition;
+            }
+            Log.i(StepService.this.getClass().getName(),
+                    "定位类型: " + aMapLocation.getLocationType()
+                            + "定位精度：" + aMapLocation.getAccuracy());
+            if (sb == null) {
+                sb = new StringBuffer();
+            }
+            //保存debug信息
+            if (sb.toString().length() > 300) {
+                LogUtils.saveDebugInfoToLocal(
+                        this, sb.toString(), LogUtils.DEBUG_DIR, LogUtils.DEBUG_FILE_NAME);
+                sb.setLength(0);
+            }
+            //记录本次行走距离
+            LogUtils.textLogStyle(sb, curPosition, lastPosition);
             //位置变化极小时忽略
             if (aMapLocation.getLocationType() ==
                     AMapLocation.LOCATION_TYPE_SAME_REQ && sb != null) {
@@ -394,25 +415,32 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
                 return;
             }
             //当前GPS状态
-            if ((aMapLocation.getGpsAccuracyStatus()
-                    == AMapLocation.GPS_ACCURACY_BAD || aMapLocation.getGpsAccuracyStatus()
-                    == AMapLocation.GPS_ACCURACY_UNKNOWN) && mCallback != null) {
-                mCallback.onLocationSignalWeak(WARING_GPS_STATUS);
+            if (mCallback != null) {
+                if (aMapLocation.getGpsAccuracyStatus() == AMapLocation.GPS_ACCURACY_GOOD) {
+                    mCallback.onLocationSignalWeak(null);
+                } else {
+                    mCallback.onLocationSignalWeak(WARING_GPS_STATUS);
+                }
             }
-            LatLng curPosition = new LatLng(
-                    aMapLocation.getLatitude(), aMapLocation.getLongitude());
             if (positions == null) {
                 positions = new ArrayList<LatLng>();
             }
-            if (isUseful(curPosition)) {
+            if (isUseful(curPosition) && positions.size() >= 3) {
                 positions.add(curPosition);
                 lastPosition = curPosition;
                 if (mCallback != null) {
+                    mCallback.onCurrentPosition(aMapLocation);
                     if (mCallback.onUpdate(positions)) {
                         positions.clear();
                         positions.add(curPosition);
                     }
                 }
+            }
+            String curInfo = sb.toString();
+            if (curInfo.length() > 300) {
+                LogUtils.saveDebugInfoToLocal(this,
+                        curInfo, LogUtils.DEBUG_DIR, LogUtils.DEBUG_FILE_NAME);
+                sb.setLength(0);
             }
         } else {
             if (sb != null) {
@@ -425,28 +453,12 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     }
 
     private boolean isUseful(LatLng curLatLng) {
-
-        if (sb == null) {
-            sb = new StringBuffer();
-        }
         if (lastPosition == null) {
             lastPosition = curLatLng;
-            //记录当前及上一个位置GPS
-            LogUtils.textLogStyle(sb, curLatLng, lastPosition, 0);
             return true;
         }
-
-        //记录当前及上一个位置GPS
+        //计算两点间距离
         float curDistance = AMapUtils.calculateLineDistance(lastPosition, curLatLng);
-        LogUtils.textLogStyle(sb, curLatLng, lastPosition, curDistance);
-
-        String curInfo = sb.toString();
-        if (curInfo.length() > 300) {
-            LogUtils.saveDebugInfoToLocal(this,
-                    curInfo, LogUtils.DEBUG_DIR, LogUtils.DEBUG_FILE_NAME);
-            sb.setLength(0);
-        }
-
         if (curDistance > MAX_DISTANCE || curDistance < MIN_DISTANCE) {
             return false;
         } else {
