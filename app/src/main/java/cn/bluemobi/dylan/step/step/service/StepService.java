@@ -103,6 +103,7 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     private AMapLocationClient mLocationClient;
     private List<LatLng> positions = null;
     private LatLng lastPosition;
+    private LatLng debugLastPosition;
 
     /**
      * 两点间距离最大值，超过该值说明该点是误差点，舍去
@@ -393,6 +394,7 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
 //            aMapLocation.setLongitude(curPosition.longitude);
             if (lastPosition == null) {
                 lastPosition = curPosition;
+                debugLastPosition = curPosition;
                 //首次定位
                 if (mCallback != null) {
                     mCallback.onCurrentPosition(aMapLocation);
@@ -411,13 +413,13 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
                 sb.setLength(0);
             }
             //记录本次行走距离
-            LogUtils.textLogStyle(sb, curPosition, lastPosition);
+            LogUtils.textLogStyle(sb, curPosition, debugLastPosition);
             //位置变化极小时忽略
-            if (aMapLocation.getLocationType() ==
-                    AMapLocation.LOCATION_TYPE_SAME_REQ && sb != null) {
-                LogUtils.locationIgnore(sb);
-                return;
-            }
+//            if (aMapLocation.getLocationType() ==
+//                    AMapLocation.LOCATION_TYPE_SAME_REQ && sb != null) {
+//                LogUtils.locationIgnore(sb);
+//                return;
+//            }
             //当前GPS状态
             if (mCallback != null) {
                 if (aMapLocation.getGpsAccuracyStatus() == AMapLocation.GPS_ACCURACY_GOOD) {
@@ -426,6 +428,8 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
                     mCallback.onLocationSignalWeak(WARING_GPS_STATUS);
                 }
             }
+
+            //处理数据
             if (positions == null) {
                 positions = new ArrayList<LatLng>();
             }
@@ -440,12 +444,7 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
                     }
                 }
             }
-            String curInfo = sb.toString();
-            if (curInfo.length() > 300) {
-                LogUtils.saveDebugInfoToLocal(this,
-                        curInfo, LogUtils.DEBUG_DIR, LogUtils.DEBUG_FILE_NAME);
-                sb.setLength(0);
-            }
+            debugLastPosition = curPosition;
         } else {
             if (sb != null) {
                 LogUtils.textError(sb, aMapLocation.getErrorCode(), aMapLocation.getErrorInfo());
