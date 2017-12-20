@@ -104,6 +104,7 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     private List<LatLng> positions = null;
     private LatLng lastPosition;
     private LatLng debugLastPosition;
+    private boolean isStart = false;
 
     /**
      * 两点间距离最大值，超过该值说明该点是误差点，舍去
@@ -112,6 +113,8 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     private static final float MIN_DISTANCE = 0.1f;
     private static final String WARING_GPS_STATUS = "当前GPS信号弱，结果可能不准确";
     private static final String WARING_LOCATION_ERROR = "当前无GPS信号，定位失败";
+    private static final int INVALID_TIME = 60 * 1000; //初始GPS定位问题，在一分钟后开始绘制路线
+    private long startTime;
 
     @Override
     public void onCreate() {
@@ -135,7 +138,6 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     private AMapLocationClientOption getLocationOption() {
         AMapLocationClientOption option = new AMapLocationClientOption();
         option.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
-        option.setInterval(3000);
         option.setLocationCacheEnable(false);
         return option;
     }
@@ -388,11 +390,16 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
     @Override
     public void onLocationChanged(AMapLocation aMapLocation) {
         if (aMapLocation != null && aMapLocation.getErrorCode() == 0) {
-            LatLng curPosition = new LatLng(
-                    aMapLocation.getLatitude(), aMapLocation.getLongitude());
+            //过滤掉前1分钟的GPS不稳定期
+            if (!isStart && startTime > 0
+                    && System.currentTimeMillis() - startTime > INVALID_TIME) {
+                isStart = true;
+            }
+            LatLng curPosition = new LatLng(aMapLocation.getLatitude(), aMapLocation.getLongitude());
 //            aMapLocation.setLatitude(curPosition.latitude);
 //            aMapLocation.setLongitude(curPosition.longitude);
             if (lastPosition == null) {
+                startTime = System.currentTimeMillis();
                 lastPosition = curPosition;
                 debugLastPosition = curPosition;
                 //首次定位
@@ -413,7 +420,8 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
                 sb.setLength(0);
             }
             //记录本次行走距离
-            LogUtils.textLogStyle(sb, curPosition, debugLastPosition);
+            LogUtils.textLogStyle(sb, curPosition,
+                    debugLastPosition, aMapLocation.getLocationType(), aMapLocation.getAccuracy());
             //位置变化极小时忽略
 //            if (aMapLocation.getLocationType() ==
 //                    AMapLocation.LOCATION_TYPE_SAME_REQ && sb != null) {
@@ -433,14 +441,20 @@ public class StepService extends Service implements SensorEventListener, AMapLoc
             if (positions == null) {
                 positions = new ArrayList<LatLng>();
             }
-            if (isUseful(curPosition)) {
-                positions.add(curPosition);
-                lastPosition = curPosition;
-                if (mCallback != null) {
-                    mCallback.onCurrentPosition(aMapLocation);
-                    if (positions.size() >= 3 && mCallback.onUpdate(positions)) {
-                        positions.clear();
+            if (mCallback != null) {
+                //小原点实时移动
+                mCallback.onCurrentPosition(aMapLocation);
+                if (isUseful(curPosition)) {
+                    lastPosition = curPosition;
+                    //已进入GPS稳定期
+                    if (isStart) {
                         positions.add(curPosition);
+                        //每正确定位10个点画一次轨迹
+                        if (positions.size() >= 5 && mCallback.onUpdate(positions)) {
+                            positions.clear();
+                            positions.add(curPosition);
+                        }
+
                     }
                 }
             }

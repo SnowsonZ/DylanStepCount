@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Environment;
 import android.text.TextUtils;
 
+import com.amap.api.location.AMapLocation;
 import com.amap.api.maps.AMapUtils;
 import com.amap.api.maps.model.LatLng;
 
@@ -87,7 +88,7 @@ public class LogUtils {
     }
 
     public static StringBuffer textLogStyle(
-            StringBuffer sb, LatLng curLatLng, LatLng lastLatLng) {
+            StringBuffer sb, LatLng curLatLng, LatLng lastLatLng, int mode, float accuracy) {
         if (sb == null || curLatLng == null || lastLatLng == null) {
             return null;
         }
@@ -96,9 +97,23 @@ public class LogUtils {
         sb.append("Last Lat: " + lastLatLng.latitude + ", Last Lon: " + lastLatLng.longitude
                 + "\n");
         sb.append("本次行走距离: " + AMapUtils.calculateLineDistance(lastLatLng, curLatLng) + "米\n");
+        sb.append("当前定位模式: " + getNameTypeByFLag(mode) + "，当前精度： " + accuracy + "米\n");
         sb.append("----------------------------------------------------------------\n");
 
         return sb;
+    }
+
+    private static String getNameTypeByFLag(int type) {
+        switch (type) {
+            case AMapLocation.LOCATION_TYPE_GPS:
+                return "通过GPS定位";
+            case AMapLocation.LOCATION_TYPE_WIFI:
+                return "通过WIFI定位";
+            case AMapLocation.LOCATION_TYPE_CELL:
+                return "通过挤占定位";
+            default:
+                return null;
+        }
     }
 
     public static StringBuffer textError(StringBuffer sb, int errorCode, String errorMsg) {
